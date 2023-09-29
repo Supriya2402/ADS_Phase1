@@ -1,0 +1,191 @@
+code:
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
+
+# Load historical stock price data (you can obtain this data from various sources)
+# For this example, let's assume you have a CSV file with a 'Date' and 'Close' column
+data = pd.read_csv('MSFT.csv')
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+data.sort_index(inplace=True)
+
+# Extract the 'Close' prices
+prices = data['Close'].values.reshape(-1, 1)
+
+# Normalize the data between 0 and 1
+scaler = MinMaxScaler()
+prices_scaled = scaler.fit_transform(prices)
+
+# Define the lookback window size and split the data into training and testing sets
+lookback_window = 60  # Number of previous days to use for prediction
+split_ratio = 0.8  # 80% of data for training, 20% for testing
+
+train_size = int(len(prices_scaled) * split_ratio)
+train_data = prices_scaled[:train_size]
+test_data = prices_scaled[train_size - lookback_window:]
+
+# Create sequences of data with the specified lookback window
+def create_sequences(data, lookback):
+    sequences = []
+    for i in range(len(data) - lookback):
+        sequences.append(data[i:i+lookback])
+    return np.array(sequences)
+
+X_train = create_sequences(train_data, lookback_window)
+y_train = train_data[lookback_window:]
+
+X_test = create_sequences(test_data, lookback_window)
+y_test = test_data[lookback_window:]
+
+# Build the LSTM model
+model = Sequential()
+model.add(LSTM(50, input_shape=(lookback_window, 1)))
+model.add(Dense(1))
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+
+# Train the model
+model.fit(X_train, y_train, epochs=50, batch_size=32)
+
+# Evaluate the model on the test data
+train_loss = model.evaluate(X_train, y_train, verbose=0)
+test_loss = model.evaluate(X_test, y_test, verbose=0)
+print(f"Train Loss: {train_loss}")
+print(f"Test Loss: {test_loss}")
+
+# Make predictions
+train_predictions = model.predict(X_train)
+test_predictions = model.predict(X_test)
+
+# Inverse transform the predictions to get the actual stock prices
+train_predictions = scaler.inverse_transform(train_predictions)
+test_predictions = scaler.inverse_transform(test_predictions)
+
+# Plot the results
+plt.figure(figsize=(12, 6))
+print(data.index[lookback_window:train_size].shape)
+print(train_data.shape)
+print(data.index[train_size + lookback_window:].shape)
+print(test_data.shape)
+print(train_predictions.shape)
+print(test_predictions.shape)
+
+output:
+
+Epoch 1/50
+212/212 [==============================] - 5s 15ms/step - loss: 6.8110e-04
+Epoch 2/50
+212/212 [==============================] - 3s 15ms/step - loss: 4.3213e-05
+Epoch 3/50
+212/212 [==============================] - 3s 16ms/step - loss: 4.0928e-05
+Epoch 4/50
+212/212 [==============================] - 3s 15ms/step - loss: 3.4803e-05
+Epoch 5/50
+212/212 [==============================] - 3s 15ms/step - loss: 3.0630e-05
+Epoch 6/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.9418e-05
+Epoch 7/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.5358e-05
+Epoch 8/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.4653e-05
+Epoch 9/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.4550e-05
+Epoch 10/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.5435e-05
+Epoch 11/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.1493e-05
+Epoch 12/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.1836e-05
+Epoch 13/50
+212/212 [==============================] - 3s 15ms/step - loss: 2.1517e-05
+Epoch 14/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.9498e-05
+Epoch 15/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.8593e-05
+Epoch 16/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.9732e-05
+Epoch 17/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.7392e-05
+Epoch 18/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.7259e-05
+Epoch 19/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.6487e-05
+Epoch 20/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.6037e-05
+Epoch 21/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.7914e-05
+Epoch 22/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.5349e-05
+Epoch 23/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.5225e-05
+Epoch 24/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.4708e-05
+Epoch 25/50
+212/212 [==============================] - 3s 15ms/step - loss: 1.3729e-05
+Epoch 26/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.3895e-05
+Epoch 27/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.4221e-05
+Epoch 28/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.3808e-05
+Epoch 29/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.2541e-05
+Epoch 30/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.3760e-05
+Epoch 31/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.2304e-05
+Epoch 32/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.2736e-05
+Epoch 33/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.2008e-05
+Epoch 34/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1985e-05
+Epoch 35/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1661e-05
+Epoch 36/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1601e-05
+Epoch 37/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1490e-05
+Epoch 38/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1787e-05
+Epoch 39/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1064e-05
+Epoch 40/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1144e-05
+Epoch 41/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1371e-05
+Epoch 42/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1497e-05
+Epoch 43/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1948e-05
+Epoch 44/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1205e-05
+Epoch 45/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.0655e-05
+Epoch 46/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.0640e-05
+Epoch 47/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.0867e-05
+Epoch 48/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.1262e-05
+Epoch 49/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.0739e-05
+Epoch 50/50
+212/212 [==============================] - 3s 16ms/step - loss: 1.0786e-05
+Train Loss: 1.1555371202121023e-05
+Test Loss: 0.0001311531668761745
+212/212 [==============================] - 2s 6ms/step
+54/54 [==============================] - 0s 6ms/step
+(6760,)
+(6820, 1)
+(1645,)
+(1765, 1)
+(6760, 1)
+(1705, 1)
+
+Process finished with exit code 0

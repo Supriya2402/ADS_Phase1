@@ -1,0 +1,35 @@
+code:
+
+import pandas as pd
+import numpy as np
+df=pd.read_csv('MSFT.csv')
+missing_values=df.isnull().sum()
+print("missing values:\n",missing_values)
+df=df.dropna()
+df['Date']=pd.to_datetime(df['Date'])
+df.set_index('Date',inplace=True)
+print("\nCleaned dataset:")
+print(df.head())
+
+output:
+
+missing values:
+ Date         0
+Open         0
+High         0
+Low          0
+Close        0
+Adj Close    0
+Volume       0
+dtype: int64
+
+Cleaned dataset:
+                Open      High       Low     Close  Adj Close      Volume
+Date                                                                     
+1986-03-13  0.088542  0.101563  0.088542  0.097222   0.062549  1031788800
+1986-03-14  0.097222  0.102431  0.097222  0.100694   0.064783   308160000
+1986-03-17  0.100694  0.103299  0.100694  0.102431   0.065899   133171200
+1986-03-18  0.102431  0.103299  0.098958  0.099826   0.064224    67766400
+1986-03-19  0.099826  0.100694  0.097222  0.098090   0.063107    47894400
+
+Process finished with exit code 0
